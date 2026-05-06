@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { X, Printer, FileText, Edit3, Settings, Check } from "lucide-react";
+import { X, Printer, FileText, Edit3, Settings, Check, Image as ImageIcon } from "lucide-react";
 import { MOCK_NEWS, NewsItem } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -53,6 +53,35 @@ function EditableSlot({
             Notizia Duplicata
           </span>
         </div>
+      )}
+    </div>
+  );
+}
+
+function EditableImage({ 
+  children, 
+  isEditMode, 
+  hasAltImages,
+  onEditImage 
+}: { 
+  children: React.ReactNode; 
+  isEditMode: boolean; 
+  hasAltImages: boolean;
+  onEditImage: () => void;
+}) {
+  return (
+    <div className="relative group/img">
+      {children}
+      {isEditMode && hasAltImages && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onEditImage();
+          }}
+          className="absolute top-2 left-2 bg-amber-500 text-white p-2 rounded-full z-[100] shadow-lg hover:scale-110 transition-transform opacity-0 group-hover/img:opacity-100"
+        >
+          <ImageIcon size={16} />
+        </button>
       )}
     </div>
   );
@@ -134,6 +163,74 @@ function NewsSelector({
   );
 }
 
+function ImageSelector({ 
+  isOpen, 
+  onClose, 
+  images,
+  currentImageUrl,
+  onSelect
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  images: string[];
+  currentImageUrl?: string;
+  onSelect: (url: string) => void;
+}) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-2 md:p-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            className="relative w-full max-w-4xl h-[70vh] md:h-auto md:max-h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+          >
+            <div className="p-4 md:p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-zinc-900">Sostituisci Foto</h3>
+                <p className="text-[10px] md:text-sm text-zinc-500">Scegli un'immagine alternativa per questo articolo</p>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-zinc-200 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {images.map((url, i) => {
+                const isCurrent = url === currentImageUrl;
+                return (
+                  <div 
+                    key={i}
+                    onClick={() => onSelect(url)}
+                    className={`relative aspect-video rounded-2xl border-4 transition-all cursor-pointer group overflow-hidden ${
+                      isCurrent ? "border-amber-500" : "border-transparent hover:border-amber-300"
+                    }`}
+                  >
+                    <img src={url} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                    
+                    {isCurrent && (
+                      <div className="absolute top-2 right-2 bg-amber-500 text-white p-1 rounded-full shadow-md z-10">
+                        <Check size={16} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(): string {
@@ -167,15 +264,13 @@ function Masthead() {
     <div className="nyt-masthead">
       <div className="nyt-masthead-top">
         <div className="nyt-masthead-left">
-          <span className="nyt-label">Ed. {getEditionNumber()}</span>
+          <span className="nyt-label"></span>
         </div>
         <div className="nyt-masthead-center">
           <h1 className="nyt-title">EDITORIALE</h1>
           <div className="nyt-subtitle">LA VOCE DEL GIORNO</div>
         </div>
         <div className="nyt-masthead-right">
-          <span className="nyt-label">{formatDateShort()}</span>
-          <span className="nyt-label nyt-price">€ 2,00</span>
         </div>
       </div>
       <div className="nyt-masthead-date-bar">
@@ -183,7 +278,7 @@ function Masthead() {
         <span className="nyt-tagline">
           "All the News That's Fit to Print"
         </span>
-        <span>ANNO XXXVII • N. {getEditionNumber()}</span>
+        <span></span>
       </div>
       <div className="nyt-rule-double" />
     </div>
@@ -227,11 +322,13 @@ function PageOne({
   news, 
   isEditMode, 
   onEditSlot,
+  onEditImageSlot,
   duplicates
 }: { 
   news: NewsItem[]; 
   isEditMode: boolean; 
   onEditSlot: (index: number) => void;
+  onEditImageSlot: (index: number) => void;
   duplicates: Set<string>;
 }) {
   const [featured, story2, story3, ...rest] = news;
@@ -258,6 +355,13 @@ function PageOne({
             <CategoryTag cat={story2?.category || "News"} />
             <h2 className="nyt-headline-med">{story2?.title}</h2>
             <ByLine author={story2?.author || ""} date={story2?.date || ""} />
+            {story2?.imageUrl && (
+              <EditableImage isEditMode={isEditMode} hasAltImages={!!story2?.altImages?.length} onEditImage={() => onEditImageSlot(1)}>
+                <div className="nyt-featured-image-wrap" style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+                  <img src={story2.imageUrl} alt={story2.title} className="nyt-featured-image" crossOrigin="anonymous" />
+                </div>
+              </EditableImage>
+            )}
             <div className="nyt-rule-thin" />
             <ArticleBody paragraphs={2} />
           </EditableSlot>
@@ -270,17 +374,19 @@ function PageOne({
             <CategoryTag cat={featured?.category || "News"} />
             <h1 className="nyt-headline-xl">{featured?.title}</h1>
             <div className="nyt-rule-thin" />
-            <div className="nyt-featured-image-wrap">
-              <img
-                src={featured?.imageUrl}
-                alt={featured?.title}
-                className="nyt-featured-image"
-                crossOrigin="anonymous"
-              />
-              <p className="nyt-caption">
-                {featured?.excerpt?.slice(0, 90)}… — Foto redazionale
-              </p>
-            </div>
+            <EditableImage isEditMode={isEditMode} hasAltImages={!!featured?.altImages?.length} onEditImage={() => onEditImageSlot(0)}>
+              <div className="nyt-featured-image-wrap">
+                <img
+                  src={featured?.imageUrl}
+                  alt={featured?.title}
+                  className="nyt-featured-image"
+                  crossOrigin="anonymous"
+                />
+                <p className="nyt-caption">
+                  {featured?.excerpt?.slice(0, 90)}… — Foto redazionale
+                </p>
+              </div>
+            </EditableImage>
             <ByLine author={featured?.author || ""} date={featured?.date || ""} />
             <div className="nyt-rule-thin" />
             <ArticleBody paragraphs={2} />
@@ -293,6 +399,13 @@ function PageOne({
             <CategoryTag cat={story3?.category || "News"} />
             <h2 className="nyt-headline-med">{story3?.title}</h2>
             <ByLine author={story3?.author || ""} date={story3?.date || ""} />
+            {story3?.imageUrl && (
+              <EditableImage isEditMode={isEditMode} hasAltImages={!!story3?.altImages?.length} onEditImage={() => onEditImageSlot(2)}>
+                <div className="nyt-featured-image-wrap" style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+                  <img src={story3.imageUrl} alt={story3.title} className="nyt-featured-image" crossOrigin="anonymous" />
+                </div>
+              </EditableImage>
+            )}
             <div className="nyt-rule-thin" />
             <ArticleBody paragraphs={1} />
           </EditableSlot>
@@ -530,9 +643,21 @@ export default function NewspaperView({ isOpen, onClose }: NewspaperViewProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [selectedImageSlotIndex, setSelectedImageSlotIndex] = useState<number | null>(null);
   
   // Initialize assigned news with sorted mock news
   const [assignedNews, setAssignedNews] = useState<NewsItem[]>([]);
+
+  const handleSwapImage = (newImageUrl: string) => {
+    if (selectedImageSlotIndex === null) return;
+    const newAssigned = [...assignedNews];
+    newAssigned[selectedImageSlotIndex] = {
+      ...newAssigned[selectedImageSlotIndex],
+      imageUrl: newImageUrl
+    };
+    setAssignedNews(newAssigned);
+    setSelectedImageSlotIndex(null);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -691,6 +816,7 @@ export default function NewspaperView({ isOpen, onClose }: NewspaperViewProps) {
               news={assignedNews} 
               isEditMode={isEditMode} 
               onEditSlot={(index) => setSelectedSlotIndex(index)} 
+              onEditImageSlot={(index) => setSelectedImageSlotIndex(index)}
               duplicates={duplicates}
             />
             <PageTwo 
@@ -718,6 +844,14 @@ export default function NewspaperView({ isOpen, onClose }: NewspaperViewProps) {
             onClose={() => setSelectedSlotIndex(null)}
             onSelect={handleSwapNews}
             currentNewsId={selectedSlotIndex !== null ? assignedNews[selectedSlotIndex]?.id : undefined}
+          />
+          
+          <ImageSelector 
+            isOpen={selectedImageSlotIndex !== null}
+            onClose={() => setSelectedImageSlotIndex(null)}
+            images={selectedImageSlotIndex !== null && assignedNews[selectedImageSlotIndex]?.altImages ? [...assignedNews[selectedImageSlotIndex].altImages, assignedNews[selectedImageSlotIndex].imageUrl] : []}
+            currentImageUrl={selectedImageSlotIndex !== null ? assignedNews[selectedImageSlotIndex]?.imageUrl : undefined}
+            onSelect={handleSwapImage}
           />
         </motion.div>
       )}

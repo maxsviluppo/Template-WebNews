@@ -51,6 +51,20 @@ export default function App({ initialView = "home", initialArticleId = null }: A
       router.push(view === "home" ? "/" : "/salvati");
     }
   };
+
+  // Sincronizza lo stato quando cambiano le props (navigazione Next.js)
+  useEffect(() => {
+    if (initialArticleId) {
+      const article = MOCK_NEWS.find(n => n.id === initialArticleId);
+      if (article) setSelectedArticle(article);
+    } else {
+      setSelectedArticle(null);
+    }
+  }, [initialArticleId]);
+
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
   const [gridLayout, setGridLayout] = useState<LayoutType>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("grid_layout");
@@ -304,7 +318,10 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="mb-12"
               >
-                <HeroSlider items={MOCK_NEWS.slice(0, 3)} />
+                <HeroSlider 
+                  items={MOCK_NEWS.slice(0, 3)} 
+                  onSelect={(item) => handleSetSelectedArticle(item)}
+                />
               </motion.section>
 
               {/* Categories Bar */}

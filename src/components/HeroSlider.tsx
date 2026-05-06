@@ -6,9 +6,10 @@ import { generateSummary } from "../services/aiService";
 
 interface HeroSliderProps {
   items: NewsItem[];
+  onSelect: (item: NewsItem) => void;
 }
 
-export default function HeroSlider({ items }: HeroSliderProps) {
+export default function HeroSlider({ items, onSelect }: HeroSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [summaries, setSummaries] = useState<Record<string, string>>({});
 
@@ -45,7 +46,8 @@ export default function HeroSlider({ items }: HeroSliderProps) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="absolute inset-0"
+          className="absolute inset-0 cursor-pointer"
+          onClick={() => onSelect(items[currentIndex])}
         >
           <img
             src={items[currentIndex].imageUrl}

@@ -65,9 +65,9 @@ const Footer: React.FC = () => {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-1">
                 <span className="text-2xl font-black tracking-tighter text-white">
-                  PRESENTE
+                  EDITOR<span className="text-amber-500">I</span>ALE
                 </span>
-                <div className="w-2 h-2 rounded-full bg-red-500 mt-2" />
+                <div className="w-2 h-2 rounded-full bg-amber-500 mt-2 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
               </div>
               <p className="text-sm leading-relaxed max-w-sm">
                 L'informazione intelligente, veloce e personalizzata. 
@@ -184,13 +184,20 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-10 text-center md:text-left">
+        <div className="mt-10 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[10px] text-zinc-700 max-w-3xl">
             © 2026 Presente Media Group S.p.A. Tutti i diritti riservati. P.IVA 01234567890. 
             Testata giornalistica registrata presso il Tribunale di Milano n. 123/2026. 
             Direttore Responsabile: Marco Rossi. I contenuti di questo sito non possono essere riprodotti 
             senza autorizzazione scritta.
           </p>
+          <a 
+            href="/admin/login" 
+            className="text-zinc-600 hover:text-zinc-400 transition-colors opacity-60 hover:opacity-100"
+            title="Accesso Riservato"
+          >
+            <ShieldCheck size={18} />
+          </a>
         </div>
       </div>
     </footer>

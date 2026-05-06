@@ -23,6 +23,8 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
+    // AI generation disabled for now as per user request
+    /*
     if (item && !item.aiSummary) {
       generateSummary(item.id, item.title, item.excerpt).then(summary => {
         setAiSummary(summary);
@@ -30,6 +32,7 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
     } else if (item?.aiSummary) {
       setAiSummary(item.aiSummary);
     }
+    */
   }, [item?.id]);
 
   useEffect(() => {

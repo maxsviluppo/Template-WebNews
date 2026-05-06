@@ -224,12 +224,18 @@
 .nyt-price { color: var(--nyt-accent); }
 
 .nyt-masthead-date-bar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 1.5mm 0;
   border-bottom: 1px solid var(--nyt-black);
   margin-bottom: 2mm;
+}
+.nyt-masthead-date-bar > span:first-child {
+  text-align: left;
+}
+.nyt-masthead-date-bar > span:last-child {
+  text-align: right;
 }
 .nyt-masthead-date-bar span {
   font-family: var(--font-label);

@@ -10,6 +10,7 @@ export interface NewsItem {
   author: string;
   date: string;
   imageUrl: string;
+  altImages?: string[];
   readTime: string;
 }
 
@@ -39,6 +40,11 @@ export const MOCK_NEWS: NewsItem[] = [
     author: "Marco Rossi",
     date: "17 Mar 2026",
     imageUrl: "https://picsum.photos/seed/tech/800/600",
+    altImages: [
+      "https://picsum.photos/seed/tech1/800/600",
+      "https://picsum.photos/seed/tech2/800/600",
+      "https://picsum.photos/seed/tech3/800/600"
+    ],
     readTime: "5 min"
   },
   {
@@ -49,6 +55,10 @@ export const MOCK_NEWS: NewsItem[] = [
     author: "Elena Bianchi",
     date: "16 Mar 2026",
     imageUrl: "https://picsum.photos/seed/economy/800/600",
+    altImages: [
+      "https://picsum.photos/seed/eco1/800/600",
+      "https://picsum.photos/seed/eco2/800/600"
+    ],
     readTime: "8 min"
   },
   {
