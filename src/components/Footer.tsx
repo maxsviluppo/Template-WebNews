@@ -193,11 +193,12 @@ const Footer: React.FC = () => {
           </p>
           <a 
             href="/admin/login" 
-            className="text-zinc-600 hover:text-zinc-400 transition-colors opacity-60 hover:opacity-100"
-            title="Accesso Riservato"
+            className="text-amber-500 hover:text-amber-400 transition-all opacity-80 hover:opacity-100 hover:scale-110"
+            title="Admin Login v1.0.3"
           >
-            <ShieldCheck size={18} />
+            <ShieldCheck size={22} />
           </a>
+          {/* Version Marker: 20260506_v3 */}
         </div>
       </div>
     </footer>

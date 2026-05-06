@@ -6,8 +6,9 @@ type Props = {
   params: { id: string }
 };
 
-export function generateMetadata({ params }: Props): Metadata {
-  const article = MOCK_NEWS.find(a => a.id === params.id);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const article = MOCK_NEWS.find(a => a.id === id);
   
   if (!article) {
     return {
@@ -26,6 +27,7 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function ArticlePage({ params }: Props) {
-  return <App initialView="home" initialArticleId={params.id} />;
+export default async function ArticlePage({ params }: Props) {
+  const { id } = await params;
+  return <App initialView="home" initialArticleId={id} />;
 }
