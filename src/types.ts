@@ -12,6 +12,9 @@ export interface NewsItem {
   imageUrl: string;
   altImages?: string[];
   readTime: string;
+  position?: "hero" | "featured" | "side";
+  status?: "Hot" | "Standard" | "Temporanea";
+  expiresIn?: string;
 }
 
 export const CATEGORIES = [
@@ -45,7 +48,10 @@ export const MOCK_NEWS: NewsItem[] = [
       "https://picsum.photos/seed/tech2/800/600",
       "https://picsum.photos/seed/tech3/800/600"
     ],
-    readTime: "5 min"
+    readTime: "5 min",
+    position: "hero",
+    status: "Hot",
+    expiresIn: "Mai"
   },
   {
     id: "2",
@@ -59,7 +65,10 @@ export const MOCK_NEWS: NewsItem[] = [
       "https://picsum.photos/seed/eco1/800/600",
       "https://picsum.photos/seed/eco2/800/600"
     ],
-    readTime: "8 min"
+    readTime: "8 min",
+    position: "hero",
+    status: "Standard",
+    expiresIn: "5 giorni"
   },
   {
     id: "3",
@@ -69,7 +78,10 @@ export const MOCK_NEWS: NewsItem[] = [
     author: "Luca Verdi",
     date: "15 Mar 2026",
     imageUrl: "https://picsum.photos/seed/culture/800/600",
-    readTime: "6 min"
+    readTime: "6 min",
+    position: "hero",
+    status: "Standard",
+    expiresIn: "4 giorni"
   },
   {
     id: "4",
@@ -79,7 +91,10 @@ export const MOCK_NEWS: NewsItem[] = [
     author: "Giulia Neri",
     date: "14 Mar 2026",
     imageUrl: "https://picsum.photos/seed/nature/800/600",
-    readTime: "4 min"
+    readTime: "4 min",
+    position: "featured",
+    status: "Standard",
+    expiresIn: "3 giorni"
   },
   {
     id: "5",
@@ -89,7 +104,10 @@ export const MOCK_NEWS: NewsItem[] = [
     author: "Alessandro Moretti",
     date: "13 Mar 2026",
     imageUrl: "https://picsum.photos/seed/space/800/600",
-    readTime: "10 min"
+    readTime: "10 min",
+    position: "featured",
+    status: "Standard",
+    expiresIn: "2 giorni"
   },
   {
     id: "6",
@@ -99,7 +117,10 @@ export const MOCK_NEWS: NewsItem[] = [
     author: "Sofia Gialli",
     date: "12 Mar 2026",
     imageUrl: "https://picsum.photos/seed/arch/800/600",
-    readTime: "7 min"
+    readTime: "7 min",
+    position: "featured",
+    status: "Standard",
+    expiresIn: "1 giorno"
   },
   {
     id: "7",
@@ -109,7 +130,10 @@ export const MOCK_NEWS: NewsItem[] = [
     author: "Roberto Blu",
     date: "11 Mar 2026",
     imageUrl: "https://picsum.photos/seed/crypto/800/600",
-    readTime: "9 min"
+    readTime: "9 min",
+    position: "featured",
+    status: "Temporanea",
+    expiresIn: "24 ore"
   },
   {
     id: "8",
