@@ -185,20 +185,20 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="mt-10 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-[10px] text-zinc-700 max-w-3xl">
-            © 2026 Presente Media Group S.p.A. Tutti i diritti riservati. P.IVA 01234567890. 
-            Testata giornalistica registrata presso il Tribunale di Milano n. 123/2026. 
-            Direttore Responsabile: Marco Rossi. I contenuti di questo sito non possono essere riprodotti 
-            senza autorizzazione scritta.
-          </p>
-          <a 
-            href="/admin/login" 
-            className="text-amber-500 hover:text-amber-400 transition-all opacity-80 hover:opacity-100 hover:scale-110"
-            title="Admin Login v1.0.3"
-          >
-            <ShieldCheck size={22} />
-          </a>
-          {/* Version Marker: 20260506_v3 */}
+          <div className="flex items-center gap-6">
+            <a 
+              href="/admin/login" 
+              className="text-amber-500 hover:text-amber-400 transition-all opacity-80 hover:opacity-100 hover:scale-110 mr-4"
+              title="Admin Login v1.0.4"
+            >
+              <ShieldCheck size={22} />
+            </a>
+            <div className="w-px h-4 bg-zinc-800" />
+            <p className="text-zinc-500 text-xs">
+              &copy; 2026 Editoriale. Tutti i diritti riservati.
+            </p>
+          </div>
+          {/* Version Marker: 20260506_v4 */}
         </div>
       </div>
     </footer>

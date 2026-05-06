@@ -24,42 +24,42 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
 
   useEffect(() => {
     // AI generation disabled for now as per user request
-    /*
-    if (item && !item.aiSummary) {
-      generateSummary(item.id, item.title, item.excerpt).then(summary => {
-        setAiSummary(summary);
-      });
-    } else if (item?.aiSummary) {
-      setAiSummary(item.aiSummary);
-    }
-    */
   }, [item?.id]);
 
   useEffect(() => {
     const loadVoices = () => {
+      if (!synth) return;
       const availableVoices = synth.getVoices();
       const italianVoices = availableVoices.filter(v => v.lang.startsWith('it'));
       setVoices(italianVoices);
       if (italianVoices.length > 0 && !selectedVoice) {
-        // Prefer Google or Natural voices if available
         const bestVoice = italianVoices.find(v => v.name.includes('Google') || v.name.includes('Natural')) || italianVoices[0];
         setSelectedVoice(bestVoice.name);
       }
     };
 
-    loadVoices();
-    if (synth.onvoiceschanged !== undefined) {
-      synth.onvoiceschanged = loadVoices;
+    if (synth) {
+      loadVoices();
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = loadVoices;
+      }
     }
 
     return () => {
-      synth.cancel();
+      if (synth) synth.cancel();
     };
   }, []);
 
-  if (!item) return null;
+  // Usiamo un ref per mantenere l'ultimo articolo valido durante l'animazione di uscita
+  const lastItem = useRef<NewsItem | null>(item);
+  if (item) lastItem.current = item;
+  
+  const displayItem = item || lastItem.current;
+
+  if (!displayItem) return null;
 
   const handleToggleRead = () => {
+    if (!synth) return;
     if (isReading) {
       if (isPaused) {
         synth.resume();
@@ -69,7 +69,7 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
         setIsPaused(true);
       }
     } else {
-      const textToRead = `${item.title}. ${item.excerpt}. Articolo di ${item.author}.`;
+      const textToRead = `${displayItem.title}. ${displayItem.excerpt}. Articolo di ${displayItem.author}.`;
       const utterance = new SpeechSynthesisUtterance(textToRead);
       
       const voice = voices.find(v => v.name === selectedVoice);
@@ -92,7 +92,7 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
   };
 
   const handleStopRead = () => {
-    synth.cancel();
+    if (synth) synth.cancel();
     setIsReading(false);
     setIsPaused(false);
   };
@@ -105,14 +105,9 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, x: "100%" }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: "100%" }}
-          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        <div
           className="fixed inset-0 bg-white z-[80] overflow-y-auto"
         >
-          {/* Header */}
           <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-zinc-100 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
             <button onClick={handleClose} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
               <ArrowLeft size={24} />
@@ -166,10 +161,10 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
 
           <article className="max-w-3xl mx-auto px-6 py-8 md:py-12">
             <span className="inline-block px-3 py-1 bg-zinc-100 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest text-zinc-600 mb-4 md:mb-6">
-              {item.category}
+              {displayItem.category}
             </span>
             <h1 className="text-3xl md:text-6xl font-serif font-bold leading-tight mb-6 md:mb-8">
-              {item.title}
+              {displayItem.title}
             </h1>
 
             <div className="flex items-center gap-4 mb-12 pb-8 border-b border-zinc-100">
@@ -177,12 +172,12 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
                 <User size={24} className="text-zinc-400" />
               </div>
               <div>
-                <p className="font-bold">{item.author}</p>
+                <p className="font-bold">{displayItem.author}</p>
                 <div className="flex items-center gap-2 text-sm text-zinc-400">
-                  <span>{item.date}</span>
+                  <span>{displayItem.date}</span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
-                    <Clock size={14} /> {item.readTime} di lettura
+                    <Clock size={14} /> {displayItem.readTime} di lettura
                   </span>
                 </div>
               </div>
@@ -190,8 +185,8 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
 
             <div className="aspect-[16/9] rounded-3xl overflow-hidden mb-12">
               <img 
-                src={item.imageUrl} 
-                alt={item.title} 
+                src={displayItem.imageUrl} 
+                alt={displayItem.title} 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
@@ -199,7 +194,7 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
 
             <div className="prose prose-zinc lg:prose-xl max-w-none">
               <p className="text-xl leading-relaxed text-zinc-700 mb-4 font-medium italic">
-                {item.excerpt}
+                {displayItem.excerpt}
               </p>
 
               {aiSummary && (
@@ -232,7 +227,7 @@ export default function ArticleDetail({ item, isOpen, onClose, isSaved, onToggle
               </p>
             </div>
           </article>
-        </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

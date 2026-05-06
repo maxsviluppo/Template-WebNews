@@ -30,11 +30,19 @@ export default function App({ initialView = "home", initialArticleId = null }: A
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [view, setView] = useState<"home" | "saved">(initialView);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const handleSetView = (newView: "home" | "saved") => {
+    if (view === newView) return;
     setView(newView);
-    if (newView === "home") router.push("/");
-    else if (newView === "saved") router.push("/salvati");
+    const targetPath = newView === "home" ? "/" : "/salvati";
+    if (typeof window !== 'undefined' && window.location.pathname !== targetPath) {
+      window.history.pushState({ ...window.history.state, as: targetPath, url: targetPath }, '', targetPath);
+    }
   };
 
   const [sharingItem, setSharingItem] = useState<NewsItem | null>(null);
@@ -44,34 +52,69 @@ export default function App({ initialView = "home", initialArticleId = null }: A
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(initialArticle);
 
   const handleSetSelectedArticle = (item: NewsItem | null) => {
-    setSelectedArticle(item);
     if (item) {
-      router.push(`/articolo/${item.id}`);
+      if (selectedArticle?.id === item.id) return;
+      setSelectedArticle(item);
+      
+      // Aggiorniamo l'URL silenziosamente per evitare il flicker del mount di Next.js
+      const targetPath = `/articolo/${item.id}`;
+      if (typeof window !== 'undefined' && window.location.pathname !== targetPath) {
+        window.history.pushState({ ...window.history.state, as: targetPath, url: targetPath }, '', targetPath);
+      }
     } else {
-      router.push(view === "home" ? "/" : "/salvati");
+      setSelectedArticle(null);
+      const targetPath = view === "home" ? "/" : "/salvati";
+      if (typeof window !== 'undefined' && window.location.pathname !== targetPath) {
+        window.history.pushState({ ...window.history.state, as: targetPath, url: targetPath }, '', targetPath);
+      }
     }
   };
 
-  // Sincronizza lo stato quando cambiano le props (navigazione Next.js)
+  // Sincronizza lo stato quando cambiano le props o l'URL
   useEffect(() => {
-    if (initialArticleId) {
-      const article = MOCK_NEWS.find(n => n.id === initialArticleId);
-      if (article) setSelectedArticle(article);
-    } else {
+    const isArticlePath = window.location.pathname.startsWith('/articolo/');
+    const pathId = window.location.pathname.split('/').pop();
+
+    if (isArticlePath && pathId) {
+      if (selectedArticle?.id !== pathId) {
+        const article = MOCK_NEWS.find(n => n.id === pathId);
+        if (article) setSelectedArticle(article);
+      }
+    } else if (!isArticlePath && selectedArticle) {
       setSelectedArticle(null);
     }
-  }, [initialArticleId]);
+    
+    // Sincronizzazione viste Home/Salvati basata su URL o prop iniziale
+    if (window.location.pathname === '/salvati') setView('saved');
+    else if (window.location.pathname === '/') setView('home');
+    else if (initialView) setView(initialView);
+
+  }, [initialArticleId, pathname, initialView, selectedArticle?.id]);
 
   useEffect(() => {
-    setView(initialView);
-  }, [initialView]);
-  const [gridLayout, setGridLayout] = useState<LayoutType>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("grid_layout");
-      return (saved as LayoutType) || 'puzzle';
-    }
-    return 'puzzle';
-  });
+    const handlePopState = () => {
+      const isArticlePath = window.location.pathname.startsWith('/articolo/');
+      const pathId = window.location.pathname.split('/').pop();
+      
+      if (isArticlePath && pathId) {
+        const article = MOCK_NEWS.find(n => n.id === pathId);
+        if (article) setSelectedArticle(article);
+      } else {
+        setSelectedArticle(null);
+      }
+
+      if (window.location.pathname === '/salvati') setView('saved');
+      else if (window.location.pathname === '/') setView('home');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+  const [gridLayout, setGridLayout] = useState<LayoutType>('puzzle');
+  useEffect(() => {
+    const saved = localStorage.getItem("grid_layout");
+    if (saved) setGridLayout(saved as LayoutType);
+  }, []);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -82,20 +125,16 @@ export default function App({ initialView = "home", initialArticleId = null }: A
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const [cardSize, setCardSize] = useState<CardSize>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("card_size");
-      return (saved as CardSize) || 'medium';
-    }
-    return 'medium';
-  });
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("theme");
-      return (saved as 'light' | 'dark') || 'light';
-    }
-    return 'light';
-  });
+  const [cardSize, setCardSize] = useState<CardSize>('medium');
+  useEffect(() => {
+    const saved = localStorage.getItem("card_size");
+    if (saved) setCardSize(saved as CardSize);
+  }, []);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) setTheme(saved as 'light' | 'dark');
+  }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -194,7 +233,7 @@ export default function App({ initialView = "home", initialArticleId = null }: A
       navigator.share({
         title: item.title,
         text: item.excerpt,
-        url: `${window.location.origin}/article/${item.id}`,
+        url: `${window.location.origin}/articolo/${item.id}`,
       }).catch(console.error);
     } else {
       setSharingItem(item);
@@ -237,14 +276,7 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                   <Menu size={24} />
                 </button>
               )}
-              <motion.div 
-                initial={false}
-                animate={{ 
-                  opacity: scrolled ? 0.7 : 1,
-                  scale: scrolled ? 0.9 : 1,
-                  filter: scrolled ? "blur(0.5px)" : "blur(0px)"
-                }}
-                transition={{ duration: 0.4 }}
+              <div 
                 className="cursor-pointer origin-left flex items-center ml-1" 
                 onClick={() => handleSetView("home")}
               >
@@ -254,7 +286,7 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                 >
                   EDITOR<span className="logo-text-i">I</span>ALE
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             <div className="flex items-center gap-1 md:gap-2">
@@ -301,52 +333,29 @@ export default function App({ initialView = "home", initialArticleId = null }: A
       </header>
 
       <main className="pt-24 md:pt-32 max-w-7xl mx-auto px-6">
-        <AnimatePresence mode="wait">
+        <div>
           {view === "home" ? (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div key="home">
               {/* Hero Section */}
-              <motion.section 
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="mb-12"
-              >
+              <section className="mb-12">
                 <HeroSlider 
                   items={MOCK_NEWS.slice(0, 3)} 
                   onSelect={(item) => handleSetSelectedArticle(item)}
                 />
-              </motion.section>
+              </section>
 
               {/* Categories Bar */}
-              <motion.section 
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="mb-8 sticky top-[64px] md:top-[88px] z-30 bg-white/95 backdrop-blur-md py-3 md:py-4 -mx-6 px-6 flex items-center justify-between gap-4 border-b border-zinc-100"
-              >
+              <section className="mb-8 sticky top-[64px] md:top-[88px] z-30 bg-white/95 backdrop-blur-md py-3 md:py-4 -mx-6 px-6 flex items-center justify-between gap-4 border-b border-zinc-100">
                 <div className="relative flex-1 flex items-center overflow-hidden">
                   {/* Left Arrow */}
-                  <AnimatePresence>
-                    {canScrollLeft && (
-                      <motion.button
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        onClick={() => scroll('left')}
-                        className="hidden md:flex absolute left-0 z-10 p-2 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-full shadow-lg text-zinc-900 hover:bg-white transition-all"
-                      >
-                        <ChevronLeft size={20} />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
+                  {canScrollLeft && (
+                    <button
+                      onClick={() => scroll('left')}
+                      className="hidden md:flex absolute left-0 z-10 p-2 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-full shadow-lg text-zinc-900 hover:bg-white transition-all"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                  )}
 
                   <div 
                     ref={scrollRef}
@@ -368,19 +377,14 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                   </div>
 
                   {/* Right Arrow */}
-                  <AnimatePresence>
-                    {canScrollRight && (
-                      <motion.button
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        onClick={() => scroll('right')}
-                        className="hidden md:flex absolute right-0 z-10 p-2 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-full shadow-lg text-zinc-900 hover:bg-white transition-all"
-                      >
-                        <ChevronRight size={20} />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
+                  {canScrollRight && (
+                    <button
+                      onClick={() => scroll('right')}
+                      className="hidden md:flex absolute right-0 z-10 p-2 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-full shadow-lg text-zinc-900 hover:bg-white transition-all"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  )}
                 </div>
 
                 {gridLayout === 'grid' && (
@@ -400,15 +404,10 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                     ))}
                   </div>
                 )}
-              </motion.section>
+              </section>
 
               {/* News Grid */}
-              <motion.section 
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className={
+              <section className={
                 gridLayout === 'puzzle' 
                   ? "grid grid-cols-2 md:grid-cols-8 gap-3 md:gap-4 mb-16 auto-rows-[300px] md:auto-rows-[180px]"
                   : cardSize === 'small'
@@ -417,94 +416,65 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                       ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 md:gap-8 mb-16"
                       : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-16"
               }>
-                <AnimatePresence mode="popLayout">
-                  {filteredNews.map((item, idx) => {
-                    let gridSpan = "";
-                    let variant: "default" | "compact" | "featured" | "portrait" = "default";
+                {filteredNews.map((item, idx) => {
+                  let gridSpan = "";
+                  let variant: "default" | "compact" | "featured" | "portrait" = "default";
 
-                    if (gridLayout === 'puzzle') {
-                      // Custom Puzzle Layout Logic (8-column based on desktop)
-                      if (isMobile) {
-                        gridSpan = "col-span-1 row-span-1";
-                        variant = "default";
-                      } else if (idx === 0) {
-                        // Riga 1: Grande (sx)
-                        gridSpan = "col-span-2 md:col-span-4 row-span-2";
-                        variant = "featured";
-                      } else if (idx === 1) {
-                        // Riga 1: Medio (centro) - Immagine piena con testo sopra
-                        gridSpan = "col-span-1 md:col-span-2 row-span-2";
-                        variant = "portrait";
-                      } else if (idx >= 2 && idx <= 3) {
-                        // Riga 1: 2 Articoli verticali (dx)
-                        gridSpan = "col-span-1 md:col-span-2 row-span-1";
-                        variant = "compact";
-                      } else if (idx >= 4 && idx <= 7) {
-                        // Riga 2: 4 box verticali (standard)
-                        gridSpan = "col-span-1 md:col-span-2 row-span-2";
-                        variant = "portrait";
-                      } else if (idx >= 8 && idx <= 13) {
-                        // Riga 3: 6 box grandi (2x2) - ora con 2 elementi in più
-                        gridSpan = "col-span-1 md:col-span-2 row-span-2";
-                        variant = "default";
-                      } else if (idx >= 14 && idx <= 17) {
-                        // Riga 4: 4 box grandi (2x2)
-                        gridSpan = "col-span-1 md:col-span-2 row-span-2";
-                        variant = "default";
-                      } else {
-                        // Fallback per il resto
-                        gridSpan = "col-span-1 md:col-span-1 row-span-1";
-                        variant = "compact";
-                      }
-                    } else {
-                      // Standard Grid logic
+                  if (gridLayout === 'puzzle') {
+                    if (isMobile) {
                       gridSpan = "col-span-1 row-span-1";
-                      variant = cardSize === 'small' ? "compact" : "default";
+                      variant = "default";
+                    } else if (idx === 0) {
+                      gridSpan = "col-span-2 md:col-span-4 row-span-2";
+                      variant = "featured";
+                    } else if (idx === 1) {
+                      gridSpan = "col-span-1 md:col-span-2 row-span-2";
+                      variant = "portrait";
+                    } else if (idx >= 2 && idx <= 3) {
+                      gridSpan = "col-span-1 md:col-span-2 row-span-1";
+                      variant = "compact";
+                    } else if (idx >= 4 && idx <= 7) {
+                      gridSpan = "col-span-1 md:col-span-2 row-span-2";
+                      variant = "portrait";
+                    } else if (idx >= 8 && idx <= 13) {
+                      gridSpan = "col-span-1 md:col-span-2 row-span-2";
+                      variant = "default";
+                    } else if (idx >= 14 && idx <= 17) {
+                      gridSpan = "col-span-1 md:col-span-2 row-span-2";
+                      variant = "default";
+                    } else {
+                      gridSpan = "col-span-1 md:col-span-1 row-span-1";
+                      variant = "compact";
                     }
+                  } else {
+                    gridSpan = "col-span-1 row-span-1";
+                    variant = cardSize === 'small' ? "compact" : "default";
+                  }
 
-                    // On mobile, we might want to simplify some spans for puzzle
-                    const mobileGridSpan = gridLayout === 'puzzle' 
-                      ? "col-span-1 row-span-1"
-                      : cardSize === 'small' ? "col-span-1" : "col-span-1";
+                  const mobileGridSpan = gridLayout === 'puzzle' 
+                    ? "col-span-1 row-span-1"
+                    : cardSize === 'small' ? "col-span-1" : "col-span-1";
 
-                    return (
-                      <motion.div
-                        key={item.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-50px" }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ 
-                          duration: 0.6, 
-                          delay: (idx % 4) * 0.1,
-                          ease: [0.21, 0.47, 0.32, 0.98]
-                        }}
-                        onClick={() => handleSetSelectedArticle(item)}
-                        className={gridLayout === 'puzzle' ? `${mobileGridSpan} md:${gridSpan}` : gridSpan}
-                      >
-                        <NewsCard 
-                          item={item} 
-                          variant={variant}
-                          isSaved={savedIds.includes(item.id)}
-                          onToggleSave={(e) => toggleSave(item.id, e)}
-                          onShare={(e) => handleShare(item, e)}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.section>
-            </motion.div>
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSetSelectedArticle(item)}
+                      className={gridLayout === 'puzzle' ? `${mobileGridSpan} md:${gridSpan}` : gridSpan}
+                    >
+                      <NewsCard 
+                        item={item} 
+                        variant={variant}
+                        isSaved={savedIds.includes(item.id)}
+                        onToggleSave={(e) => toggleSave(item.id, e)}
+                        onShare={(e) => handleShare(item, e)}
+                      />
+                    </div>
+                  );
+                })}
+              </section>
+            </div>
           ) : (
-            <motion.div
-              key="saved"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="min-h-[60vh]"
-            >
+            <div key="saved" className="min-h-[60vh]">
               <div className="mb-12">
                 <h2 className="text-4xl font-serif font-bold mb-2">Articoli Salvati</h2>
                 <p className="text-zinc-500">I tuoi contenuti preferiti per una lettura successiva.</p>
@@ -540,19 +510,13 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                   </button>
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
 
         {/* Trending Section (Compact) - Only on Home */}
         {view === "home" && (
-          <motion.section 
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mb-16"
-          >
+          <section className="mb-16">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-serif font-bold">Più letti oggi</h2>
               <button className="text-sm font-bold text-zinc-400 hover:text-zinc-900 transition-colors">
@@ -572,7 +536,7 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                 </div>
               ))}
             </div>
-          </motion.section>
+          </section>
         )}
       </main>
 

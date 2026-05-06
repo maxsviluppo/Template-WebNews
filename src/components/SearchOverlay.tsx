@@ -12,13 +12,17 @@ interface SearchOverlayProps {
 export default function SearchOverlay({ isOpen, onClose, onSelect }: SearchOverlayProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<NewsItem[]>([]);
-  const [history, setHistory] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("search_history");
-      return saved ? JSON.parse(saved) : [];
+  const [history, setHistory] = useState<string[]>([]);
+  useEffect(() => {
+    const saved = localStorage.getItem("search_history");
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse search history", e);
+      }
     }
-    return [];
-  });
+  }, []);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

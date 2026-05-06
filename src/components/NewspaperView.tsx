@@ -233,7 +233,8 @@ function ImageSelector({
 }
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatDate(): string {
+function formatDate(mounted: boolean): string {
+  if (!mounted || typeof window === "undefined") return "Lunedì, 1 Gennaio 2026";
   return new Date().toLocaleDateString("it-IT", {
     weekday: "long",
     year: "numeric",
@@ -242,7 +243,8 @@ function formatDate(): string {
   });
 }
 
-function formatDateShort(): string {
+function formatDateShort(mounted: boolean): string {
+  if (!mounted || typeof window === "undefined") return "1 Gennaio 2026";
   return new Date().toLocaleDateString("it-IT", {
     day: "2-digit",
     month: "long",
@@ -251,7 +253,8 @@ function formatDateShort(): string {
 }
 
 // Edition number based on day of year
-function getEditionNumber(): number {
+function getEditionNumber(mounted: boolean): number {
+  if (!mounted) return 1;
   const start = new Date(new Date().getFullYear(), 0, 0);
   const diff = +new Date() - +start;
   return Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -259,12 +262,12 @@ function getEditionNumber(): number {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function Masthead() {
+function Masthead({ mounted }: { mounted: boolean }) {
   return (
     <div className="nyt-masthead">
       <div className="nyt-masthead-top">
         <div className="nyt-masthead-left">
-          <span className="nyt-label"></span>
+          <span className="nyt-label">EDIZIONE N. {getEditionNumber(mounted)}</span>
         </div>
         <div className="nyt-masthead-center">
           <h1 className="nyt-title">EDITORIALE</h1>
@@ -274,7 +277,7 @@ function Masthead() {
         </div>
       </div>
       <div className="nyt-masthead-date-bar">
-        <span>{formatDate().toUpperCase()}</span>
+        <span>{formatDate(mounted).toUpperCase()}</span>
         <span className="nyt-tagline">
           "All the News That's Fit to Print"
         </span>
@@ -323,19 +326,21 @@ function PageOne({
   isEditMode, 
   onEditSlot,
   onEditImageSlot,
-  duplicates
+  duplicates,
+  mounted
 }: { 
   news: NewsItem[]; 
   isEditMode: boolean; 
   onEditSlot: (index: number) => void;
   onEditImageSlot: (index: number) => void;
   duplicates: Set<string>;
+  mounted: boolean;
 }) {
   const [featured, story2, story3, ...rest] = news;
 
   return (
     <div className="nyt-page nyt-page-one">
-      <Masthead />
+      <Masthead mounted={mounted} />
 
       {/* TOP INDEX BAR */}
       <div className="nyt-index-bar">
@@ -430,7 +435,7 @@ function PageOne({
         <p className="nyt-strip-label">CONTINUA IN PAGINA 2 →</p>
       </div>
 
-      <PageFooter page={1} />
+      <PageFooter page={1} mounted={mounted} />
     </div>
   );
 }
@@ -439,12 +444,14 @@ function PageTwo({
   news, 
   isEditMode, 
   onEditSlot,
-  duplicates
+  duplicates,
+  mounted
 }: { 
   news: NewsItem[]; 
   isEditMode: boolean; 
   onEditSlot: (index: number) => void;
   duplicates: Set<string>;
+  mounted: boolean;
 }) {
   const stories = news.slice(3, 9);
 
@@ -452,7 +459,7 @@ function PageTwo({
     <div className="nyt-page">
       <div className="nyt-inner-header">
         <span className="nyt-inner-title">EDITORIALE</span>
-        <span className="nyt-inner-date">{formatDateShort()} — PAGINA 2</span>
+        <span className="nyt-inner-date">{formatDateShort(mounted)} — PAGINA 2</span>
         <span className="nyt-inner-section">ECONOMIA &amp; TECNOLOGIA</span>
       </div>
       <div className="nyt-rule-double" />
@@ -497,7 +504,7 @@ function PageTwo({
         ))}
       </div>
 
-      <PageFooter page={2} />
+      <PageFooter page={2} mounted={mounted} />
     </div>
   );
 }
@@ -520,7 +527,7 @@ function PageThree({
     <div className="nyt-page">
       <div className="nyt-inner-header">
         <span className="nyt-inner-title">EDITORIALE</span>
-        <span className="nyt-inner-date">{formatDateShort()} — PAGINA 3</span>
+        <span className="nyt-inner-date">{formatDateShort(mounted)} — PAGINA 3</span>
         <span className="nyt-inner-section">CULTURA &amp; SOCIETÀ</span>
       </div>
       <div className="nyt-rule-double" />
@@ -558,7 +565,7 @@ function PageThree({
         </div>
       </div>
 
-      <PageFooter page={3} />
+      <PageFooter page={3} mounted={mounted} />
     </div>
   );
 }
@@ -582,7 +589,7 @@ function PageFour({
     <div className="nyt-page">
       <div className="nyt-inner-header">
         <span className="nyt-inner-title">EDITORIALE</span>
-        <span className="nyt-inner-date">{formatDateShort()} — PAGINA 4</span>
+        <span className="nyt-inner-date">{formatDateShort(mounted)} — PAGINA 4</span>
         <span className="nyt-inner-section">SPORT, VIAGGI &amp; LIFESTYLE</span>
       </div>
       <div className="nyt-rule-double" />
@@ -619,18 +626,18 @@ function PageFour({
         </div>
       </div>
 
-      <PageFooter page={4} />
+      <PageFooter page={4} mounted={mounted} />
     </div>
   );
 }
 
-function PageFooter({ page }: { page: number }) {
+function PageFooter({ page, mounted }: { page: number; mounted: boolean }) {
   return (
     <div className="nyt-page-footer">
       <div className="nyt-rule-thin" />
       <div className="nyt-footer-row">
         <span>EDITORIALE</span>
-        <span>{formatDateShort().toUpperCase()}</span>
+        <span>{formatDateShort(mounted).toUpperCase()}</span>
         <span>PAG. {page}</span>
       </div>
     </div>
@@ -643,6 +650,11 @@ export default function NewspaperView({ isOpen, onClose }: NewspaperViewProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [selectedImageSlotIndex, setSelectedImageSlotIndex] = useState<number | null>(null);
   
   // Initialize assigned news with sorted mock news
@@ -741,7 +753,7 @@ export default function NewspaperView({ isOpen, onClose }: NewspaperViewProps) {
     setSelectedSlotIndex(null);
   };
 
-  if (assignedNews.length === 0) return null;
+  if (!mounted || assignedNews.length === 0) return null;
 
   return (
     <AnimatePresence>
@@ -818,24 +830,28 @@ export default function NewspaperView({ isOpen, onClose }: NewspaperViewProps) {
               onEditSlot={(index) => setSelectedSlotIndex(index)} 
               onEditImageSlot={(index) => setSelectedImageSlotIndex(index)}
               duplicates={duplicates}
+              mounted={mounted}
             />
             <PageTwo 
               news={assignedNews} 
               isEditMode={isEditMode} 
               onEditSlot={(index) => setSelectedSlotIndex(index)} 
               duplicates={duplicates}
+              mounted={mounted}
             />
             <PageThree 
               news={assignedNews} 
               isEditMode={isEditMode} 
               onEditSlot={(index) => setSelectedSlotIndex(index)} 
               duplicates={duplicates}
+              mounted={mounted}
             />
             <PageFour 
               news={assignedNews} 
               isEditMode={isEditMode} 
               onEditSlot={(index) => setSelectedSlotIndex(index)} 
               duplicates={duplicates}
+              mounted={mounted}
             />
           </div>
 
