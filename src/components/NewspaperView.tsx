@@ -513,12 +513,14 @@ function PageThree({
   news, 
   isEditMode, 
   onEditSlot,
-  duplicates
+  duplicates,
+  mounted
 }: { 
   news: NewsItem[]; 
   isEditMode: boolean; 
   onEditSlot: (index: number) => void;
   duplicates: Set<string>;
+  mounted: boolean;
 }) {
   const stories = news.slice(9, 14);
   const [big, ...smalls] = stories;
@@ -574,12 +576,14 @@ function PageFour({
   news, 
   isEditMode, 
   onEditSlot,
-  duplicates
+  duplicates,
+  mounted
 }: { 
   news: NewsItem[]; 
   isEditMode: boolean; 
   onEditSlot: (index: number) => void;
   duplicates: Set<string>;
+  mounted: boolean;
 }) {
   const stories = news.slice(14);
   // Fill up to 6 stories for this page if needed
