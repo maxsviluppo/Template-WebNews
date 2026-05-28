@@ -345,13 +345,13 @@ export default function App({ initialView = "home", initialArticleId = null }: A
               </section>
 
               {/* Categories Bar */}
-              <section className="mb-8 sticky top-[64px] md:top-[88px] z-30 bg-white/95 backdrop-blur-md py-3 md:py-4 -mx-6 px-6 flex items-center justify-between gap-4 border-b border-zinc-100">
+              <section className="mb-8 sticky top-[64px] md:top-[88px] z-30 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md py-3 md:py-4 -mx-6 px-6 flex items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800">
                 <div className="relative flex-1 flex items-center overflow-hidden">
                   {/* Left Arrow */}
                   {canScrollLeft && (
                     <button
                       onClick={() => scroll('left')}
-                      className="hidden md:flex absolute left-0 z-10 p-2 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-full shadow-lg text-zinc-900 hover:bg-white transition-all"
+                      className="hidden md:flex absolute left-0 z-10 p-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-100 dark:border-zinc-800 rounded-full shadow-lg text-zinc-900 dark:text-zinc-100 hover:bg-white dark:hover:bg-zinc-800 transition-all"
                     >
                       <ChevronLeft size={20} />
                     </button>
@@ -367,8 +367,8 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                         onClick={() => setActiveCategory(cat)}
                         className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-semibold transition-all flex-shrink-0 backdrop-blur-md border ${
                           activeCategory === cat
-                            ? "bg-zinc-900/90 text-white border-zinc-800"
-                            : "bg-white/40 text-zinc-500 border-zinc-200/50 hover:bg-white/60 hover:border-zinc-300/50"
+                            ? "bg-zinc-900/90 dark:bg-zinc-100/90 text-white dark:text-zinc-900 border-zinc-800 dark:border-zinc-200"
+                            : "bg-white/40 dark:bg-zinc-900/40 text-zinc-500 dark:text-zinc-400 border-zinc-200/50 dark:border-zinc-800/50 hover:bg-white/60 dark:hover:bg-zinc-900/60 hover:border-zinc-300/50 dark:hover:border-zinc-700/50"
                         }`}
                       >
                         {cat}
@@ -380,7 +380,7 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                   {canScrollRight && (
                     <button
                       onClick={() => scroll('right')}
-                      className="hidden md:flex absolute right-0 z-10 p-2 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-full shadow-lg text-zinc-900 hover:bg-white transition-all"
+                      className="hidden md:flex absolute right-0 z-10 p-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-100 dark:border-zinc-800 rounded-full shadow-lg text-zinc-900 dark:text-zinc-100 hover:bg-white dark:hover:bg-zinc-800 transition-all"
                     >
                       <ChevronRight size={20} />
                     </button>
@@ -388,15 +388,15 @@ export default function App({ initialView = "home", initialArticleId = null }: A
                 </div>
 
                 {gridLayout === 'grid' && (
-                  <div className="hidden md:flex items-center gap-1 bg-zinc-50 p-1 rounded-full border border-zinc-100 flex-shrink-0 ml-4">
+                  <div className="hidden md:flex items-center gap-1 bg-zinc-50 dark:bg-zinc-900 p-1 rounded-full border border-zinc-100 dark:border-zinc-800 flex-shrink-0 ml-4">
                     {(['small', 'medium', 'large'] as CardSize[]).map((size) => (
                       <button
                         key={size}
                         onClick={() => setCardSize(size)}
                         className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
                           cardSize === size
-                            ? "bg-white text-zinc-900 shadow-sm"
-                            : "text-zinc-400 hover:text-zinc-600"
+                            ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                            : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
                         }`}
                       >
                         {size === 'small' ? 'S' : size === 'medium' ? 'M' : 'L'}
