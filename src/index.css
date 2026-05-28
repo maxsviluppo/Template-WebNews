@@ -23,6 +23,33 @@
   @apply bg-zinc-900;
 }
 
+/* Specific dark mode overrides for opacity classes not handled by standard utilities */
+.dark .bg-white\/95 {
+  background-color: rgba(9, 9, 11, 0.95) !important; /* zinc-950/95 */
+  border-color: rgba(39, 39, 42, 0.8) !important; /* zinc-800 */
+}
+
+.dark .bg-white\/90 {
+  background-color: rgba(24, 24, 27, 0.9) !important; /* zinc-900/90 */
+  border-color: rgba(39, 39, 42, 0.8) !important; /* zinc-800 */
+  color: #f4f4f5 !important;
+}
+
+.dark .bg-white\/40 {
+  background-color: rgba(39, 39, 42, 0.4) !important; /* zinc-800/40 */
+  border-color: rgba(63, 63, 70, 0.3) !important;
+  color: #a1a1aa !important;
+}
+
+.dark .bg-white\/40:hover {
+  background-color: rgba(39, 39, 42, 0.6) !important;
+  border-color: rgba(63, 63, 70, 0.5) !important;
+}
+
+.dark .border-zinc-100 {
+  border-color: rgba(39, 39, 42, 0.8) !important;
+}
+
 .dark .bg-zinc-50 {
   @apply bg-zinc-800;
 }
